@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
-import { Table, Input, InputNumber, Popconfirm, Form, Button } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Input, InputNumber, Popconfirm, Form, Button, AutoComplete } from 'antd';
 
-const EditableCell = ({ editing, dataIndex, title, inputType, record, index, children, ...restProps }) => {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
-  return (
-    <td {...restProps}>
-      {editing ? (
-        <Form.Item name={dataIndex} style={{ margin: 0 }} rules={[{ required: true, message: `Please Input ${title}!` }]}>
-          {inputNode}
-        </Form.Item>
-      ) : (
-        children
-      )}
-    </td>
-  );
-};
+import EditableCell from './EditableCell';
 
 const PurchaseOrderTable = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState([]);
   const [editingKey, setEditingKey] = useState('');
+  const [itemOptions, setItemOptions] = useState([]);
+
+  useEffect(() => {
+    fetchItemOptions();
+  }, []);
+
+  const fetchItemOptions = async () => {
+    try {
+      // Replace 'ITEM_LOOKUP_API_URL' with your actual item lookup API endpoint
+      const response = await fetch('ITEM_LOOKUP_API_URL');
+      const data = await response.json();
+      setItemOptions(data);
+    } catch (error) {
+      console.error('Error fetching item options:', error);
+    }
+  };
 
   const isEditing = (record) => record.key === editingKey;
 
@@ -70,6 +73,8 @@ const PurchaseOrderTable = () => {
       dataIndex: 'item',
       width: '25%',
       editable: true,
+      inputType: 'autocomplete',
+      options: itemOptions,
     },
     {
       title: 'Quantity',
@@ -115,10 +120,11 @@ const PurchaseOrderTable = () => {
       ...col,
       onCell: (record) => ({
         record,
-        inputType: col.dataIndex === 'quantity' || col.dataIndex === 'price' ? 'number' : 'text',
+        inputType: col.inputType === 'number' ? 'number' : 'text',
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
+        options: col.options,
       }),
     };
   });
