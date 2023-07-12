@@ -1,5 +1,5 @@
 import React from 'react';
-import { AutoComplete, Form, Input, InputNumber } from 'antd';
+import { AutoComplete, Form, Input } from 'antd';
 
 const EditableCell = ({
   editing,
@@ -9,23 +9,32 @@ const EditableCell = ({
   record,
   index,
   children,
+  handleAutocompleteSelect,
   options,
   ...restProps
 }) => {
-  const inputNode =
-    inputType === 'number' ? (
-      <InputNumber />
-    ) : inputType === 'autocomplete' ? (
-      <AutoComplete options={options} />
-    ) : (
-      <Input />
-    );
+  const renderInput = () => {
+    if (inputType === 'autocomplete') {
+      return (
+        <Form.Item name={dataIndex} style={{ margin: 0 }}>
+          <AutoComplete
+            options={options}
+            getOptionLabel={(option) => option.name} // Specify the property for the display label
+            renderOption={(option) => option.name} // Specify how each option should be rendered in the dropdown
+            onChange={(event, value) => handleAutocompleteSelect(value, dataIndex)}
+            // Other props for Autocomplete component
+          />
+        </Form.Item>
+      );
+    }
+
+    return <Input />;
+  };
+
   return (
     <td {...restProps}>
       {editing ? (
-        <Form.Item name={dataIndex} style={{ margin: 0 }} rules={[{ required: true, message: `Please Input ${title}!` }]}>
-          {inputNode}
-        </Form.Item>
+        renderInput()
       ) : (
         children
       )}
